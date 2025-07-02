@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { createClient } from "@/lib/supabase/client"
 import { useState } from "react"
 
 interface AuthModalProps {
@@ -20,11 +21,52 @@ export function AuthModal({ isOpen, onClose, mode, onModeChange }: AuthModalProp
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle authentication logic here
-    console.log({ email, password, name, mode })
+    setIsLoading(true)
+
+    try {
+      const supabase = createClient()
+
+      if (mode === "signin") {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+        if (error) throw error
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: name,
+            },
+          },
+        })
+        if (error) throw error
+      }
+
+      onClose()
+      window.location.reload()
+    } catch (error: any) {
+      console.error("Auth error:", error.message)
+      // You can add toast notification here
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    const supabase = createClient()
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
   }
 
   return (
@@ -45,6 +87,7 @@ export function AuthModal({ isOpen, onClose, mode, onModeChange }: AuthModalProp
             <Button
               variant="outline"
               className="w-full bg-white border-gray-300 hover:bg-gray-50 text-[#212529] rounded-xl py-3 font-medium transition-all duration-200 hover:shadow-md"
+              onClick={handleGoogleSignIn}
             >
               <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                 <path
@@ -137,8 +180,9 @@ export function AuthModal({ isOpen, onClose, mode, onModeChange }: AuthModalProp
             <Button
               type="submit"
               className="w-full bg-gradient-to-r from-[#FFD700] to-[#B8860B] text-[#212529] hover:from-[#B8860B] hover:to-[#FFD700] rounded-xl py-3 font-medium shadow-md hover:shadow-lg transition-all duration-200"
+              disabled={isLoading || !email || !password || (mode === "signup" && !name)}
             >
-              {mode === "signin" ? "Sign In" : "Create Account"}
+              {isLoading ? "Loading..." : mode === "signin" ? "Sign In" : "Create Account"}
             </Button>
           </form>
 

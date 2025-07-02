@@ -1,10 +1,39 @@
 import { streamText } from "ai"
 import { openai } from "@ai-sdk/openai"
+import { createClient } from "@/lib/supabase/server"
 
 export async function POST(req: Request) {
-  const { messages, eventType, eventName, eventCategory, outputFormat, mentorPersona } = await req.json()
+  try {
+    const { messages, eventType, eventName, eventCategory, outputFormat, mentorPersona } = await req.json()
 
-  const systemPrompt = `You are an expert ${mentorPersona} specializing in ${eventName} competitions. 
+    // Check user authentication and usage limits
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return new Response("Unauthorized", { status: 401 })
+    }
+
+    // Get user data to check limits
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("prompts_used, prompts_limit, subscription_tier")
+      .eq("id", user.id)
+      .single()
+
+    if (userError) {
+      return new Response("User data not found", { status: 404 })
+    }
+
+    // Check if user has reached limit (for free tier)
+    if (userData.subscription_tier === "free" && userData.prompts_used >= userData.prompts_limit) {
+      return new Response("Usage limit reached", { status: 429 })
+    }
+
+    const systemPrompt = `You are an expert ${mentorPersona} specializing in ${eventName} competitions. 
 
 Your role is to:
 1. Act as a personal academic mentor for students preparing for ${eventName} events
@@ -22,13 +51,17 @@ Key guidelines:
 
 Remember: You are not just providing information - you are formatting and presenting it in the exact style and structure that judges and evaluators expect to see in ${eventName} competitions.`
 
-  const result = streamText({
-    model: openai("gpt-4o"),
-    system: systemPrompt,
-    messages,
-    temperature: 0.7,
-    maxTokens: 2000,
-  })
+    const result = streamText({
+      model: openai("gpt-4o"),
+      system: systemPrompt,
+      messages,
+      temperature: 0.7,
+      maxTokens: 2000,
+    })
 
-  return result.toDataStreamResponse()
+    return result.toDataStreamResponse()
+  } catch (error) {
+    console.error("Chat API error:", error)
+    return new Response("Internal server error", { status: 500 })
+  }
 }

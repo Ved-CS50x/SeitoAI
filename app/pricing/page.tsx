@@ -12,14 +12,13 @@ import { cn } from "@/lib/utils"
 const plans = [
   {
     name: "Student",
-    price: "$9.99",
+    price: "₹99",
     period: "per month",
     description: "Perfect for individual students preparing for competitions",
     features: [
       "Access to all 15+ event categories",
       "100 AI responses per month",
       "Format-specific guidance",
-      "Export to PDF/Word",
       "Email support",
       "Conversation history",
     ],
@@ -28,14 +27,13 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "$19.99",
+    price: "₹499",
     period: "per month",
     description: "For serious competitors who need unlimited access",
     features: [
       "Everything in Student plan",
       "Unlimited AI responses",
-      "Priority support",
-      "Advanced analytics",
+      "Export options",
       "Custom templates",
       "Progress tracking",
       "1-on-1 consultation (monthly)",
@@ -45,7 +43,7 @@ const plans = [
   },
   {
     name: "Team",
-    price: "$49.99",
+    price: "₹1,199",
     period: "per month",
     description: "For educational institutions and debate societies",
     features: [
@@ -149,7 +147,7 @@ export default function PricingPage() {
                   <div className="mb-4">
                     <span className="text-4xl font-bold text-[#212529]">
                       {isAnnual && plan.name !== "Team"
-                        ? `$${(Number.parseFloat(plan.price.replace("$", "")) * 0.8 * 12).toFixed(0)}`
+                        ? `₹${(Number.parseFloat(plan.price.replace("₹", "")) * 0.8 * 12).toFixed(0)}`
                         : plan.price}
                     </span>
                     <span className="text-gray-600 font-light">
@@ -192,7 +190,7 @@ export default function PricingPage() {
             </p>
             <Button
               variant="outline"
-              className="border-[#FFD700] text-[#FFD700] hover:bg-[#FFD700] hover:text-[#212529] rounded-full px-8 py-3 font-medium"
+              className="border-[#FFD700] text-[#FFD700] hover:bg-[#FFD700] hover:text-[#212529] rounded-full px-8 py-3 font-medium bg-transparent"
             >
               Contact Enterprise Sales
             </Button>

@@ -8,6 +8,7 @@ import { EventCards } from "@/components/event-cards"
 import { ChatInterface } from "@/components/chat-interface"
 import { Footer } from "@/components/footer"
 import type { TLHEvent } from "@/types/events"
+import { TestimonialsSection } from "@/components/testimonials-section"
 
 export default function Home() {
   const [selectedEvent, setSelectedEvent] = useState<TLHEvent | null>(null)
@@ -52,6 +53,7 @@ export default function Home() {
       <Navigation isScrolled={isScrolled} showNav={showNav} />
       <WelcomeSection />
       <EventCards onEventSelect={handleEventSelect} />
+      <TestimonialsSection />
       <Footer />
     </div>
   )

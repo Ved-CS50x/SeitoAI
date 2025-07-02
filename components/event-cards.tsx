@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { type TLHEvent, eventCategories } from "@/types/events"
 import { Scale, Globe, MessageSquare, FileText, Lightbulb, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { createClient } from "@/lib/supabase/client"
 
 interface EventCardsProps {
   onEventSelect: (event: TLHEvent) => void
@@ -32,6 +33,7 @@ export function EventCards({ onEventSelect }: EventCardsProps) {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
   const [hoveredEvent, setHoveredEvent] = useState<string | null>(null)
   const cardRefs = useRef<(HTMLDivElement | null)[]>([])
+  const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
     const observers = cardRefs.current.map((ref, index) => {
@@ -55,6 +57,13 @@ export function EventCards({ onEventSelect }: EventCardsProps) {
     return () => {
       observers.forEach((observer) => observer?.disconnect())
     }
+  }, [])
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+    })
   }, [])
 
   return (
@@ -137,7 +146,14 @@ export function EventCards({ onEventSelect }: EventCardsProps) {
                           )}
                           onMouseEnter={() => setHoveredEvent(event.id)}
                           onMouseLeave={() => setHoveredEvent(null)}
-                          onClick={() => onEventSelect(event)}
+                          onClick={() => {
+                            if (!user) {
+                              // Trigger auth modal or redirect to sign in
+                              alert("Please sign in to access events")
+                              return
+                            }
+                            onEventSelect(event)
+                          }}
                         >
                           {event.name}
                         </Button>
